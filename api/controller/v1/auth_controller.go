@@ -4,6 +4,7 @@ import (
 	"auth-service/config"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -33,7 +34,7 @@ func (c *authController) Callback(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	userInfo, err := fetchUserInfo(token.AccessToken)
+	userInfo, err := c.fetchUserInfo(token.AccessToken)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
@@ -57,9 +58,10 @@ func (c *authController) Authenticate(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, map[string]interface{}{"message": "Authentication successful"})
 }
 
-func fetchUserInfo(accessToken string) (map[string]interface{}, error) {
+func (c *authController) fetchUserInfo(accessToken string) (map[string]interface{}, error) {
 	// Make a request to the UserInfo endpoint to fetch user details
-	resp, err := http.Get("https://www.googleapis.com/oauth2/v3/userinfo?access_token=" + accessToken)
+	queryParams := fmt.Sprintf("?access_token=%s", accessToken)
+	resp, err := http.Get(c.config.UserInfoURL + queryParams)
 	if err != nil {
 		return nil, err
 	}

@@ -12,6 +12,7 @@ var config *Config
 
 type Config struct {
 	OauthConfig *oauth2.Config
+	UserInfoURL string
 }
 
 func InitConfig() {
@@ -31,6 +32,7 @@ func InitConfig() {
 			},
 			Scopes: []string{"openid", "profile", "email"},
 		},
+		UserInfoURL: os.Getenv("USER_INFO_URL"),
 	}
 }
 
