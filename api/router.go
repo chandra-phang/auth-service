@@ -10,13 +10,13 @@ import (
 func InitRoutes() {
 	e := echo.New()
 
-	productController := v1.InitAuthController()
-	v1Api := e.Group("v1")
+	authController := v1.InitAuthController()
 
-	v1Api.GET("/login", productController.HandleLogin)
-	v1Api.GET("/callback", productController.HandleCallback)
-	v1Api.GET("/logout", productController.HandleLogout)
-	v1Api.GET("/authenticate", productController.HandleAuthenticate)
+	v1Api := e.Group("v1")
+	v1Api.GET("/login", authController.Login)
+	v1Api.GET("/callback", authController.Callback)
+	v1Api.GET("/logout", authController.Logout)
+	v1Api.GET("/authenticate", authController.Authenticate)
 
 	log.Println("Server is running at 8081 port.")
 	e.Logger.Fatal(e.Start(":8081"))

@@ -21,12 +21,12 @@ func InitAuthController() *authController {
 	}
 }
 
-func (c *authController) HandleLogin(ctx echo.Context) error {
+func (c *authController) Login(ctx echo.Context) error {
 	url := c.config.OauthConfig.AuthCodeURL("state", oauth2.AccessTypeOffline)
 	return ctx.JSON(http.StatusOK, map[string]string{"redirectUrl": url})
 }
 
-func (c *authController) HandleCallback(ctx echo.Context) error {
+func (c *authController) Callback(ctx echo.Context) error {
 	code := ctx.QueryParam("code")
 	token, err := c.config.OauthConfig.Exchange(context.Background(), code)
 	if err != nil {
@@ -43,14 +43,14 @@ func (c *authController) HandleCallback(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, map[string]interface{}{"access_token": token.AccessToken, "userInfo": userInfo})
 }
 
-func (c *authController) HandleLogout(ctx echo.Context) error {
+func (c *authController) Logout(ctx echo.Context) error {
 	// Revoke the user's access token and refresh token
 	// Optionally: destroy the user session
 
 	return ctx.JSON(http.StatusOK, map[string]interface{}{"message": "Logout successful"})
 }
 
-func (c *authController) HandleAuthenticate(ctx echo.Context) error {
+func (c *authController) Authenticate(ctx echo.Context) error {
 	accessToken := ctx.QueryParam("access_token")
 	// Validate the access token, check user permissions, etc.
 	log.Println(accessToken)
