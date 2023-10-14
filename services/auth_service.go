@@ -145,8 +145,8 @@ func (svc authSvc) Logout(ctx echo.Context) error {
 }
 
 func (svc authSvc) Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) error {
-	tokenString := ctx.Get("accessToken").(string)
-	if tokenString == "" {
+	tokenString := ctx.Get("accessToken")
+	if tokenString == nil {
 		return apperrors.ErrAccessTokenIsEmpty
 	}
 
@@ -154,7 +154,7 @@ func (svc authSvc) Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) err
 	tx, _ := svc.dbCon.Begin()
 	defer tx.Rollback()
 
-	accessToken, err := svc.accessTokenRepo.GetAccessTokenByTokenString(ctx, tokenString)
+	accessToken, err := svc.accessTokenRepo.GetAccessTokenByTokenString(ctx, tokenString.(string))
 	if err != nil {
 		return apperrors.ErrAccessTokenNotFound
 	}
