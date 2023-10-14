@@ -3,6 +3,7 @@ package v1
 import (
 	"auth-service/api/controllers"
 	v1request "auth-service/dto/request/v1"
+	v1response "auth-service/dto/response/v1"
 	"auth-service/services"
 	"encoding/json"
 	"io/ioutil"
@@ -23,7 +24,8 @@ func InitAuthController() *authController {
 
 func (c *authController) Login(ctx echo.Context) error {
 	url := c.authService.Login(ctx)
-	return controllers.WriteSuccess(ctx, http.StatusOK, url)
+	dto := v1response.LoginDTO{LoginUrl: url}
+	return controllers.WriteSuccess(ctx, http.StatusOK, dto)
 }
 
 func (c *authController) Callback(ctx echo.Context) error {
@@ -43,8 +45,8 @@ func (c *authController) Logout(ctx echo.Context) error {
 		return controllers.WriteError(ctx, http.StatusInternalServerError, err)
 	}
 
-	resp := map[string]interface{}{"message": "Logout successful"}
-	return ctx.JSON(http.StatusOK, resp)
+	dto := v1response.AuthenticateDTO{Message: "Logout success!"}
+	return controllers.WriteSuccess(ctx, http.StatusOK, dto)
 }
 
 func (c *authController) Authenticate(ctx echo.Context) error {
@@ -65,6 +67,6 @@ func (c *authController) Authenticate(ctx echo.Context) error {
 		return controllers.WriteError(ctx, http.StatusUnauthorized, err)
 	}
 
-	resp := map[string]interface{}{"message": "Authentication successful"}
-	return ctx.JSON(http.StatusOK, resp)
+	responseDTO := v1response.AuthenticateDTO{Message: "Authentication success!"}
+	return controllers.WriteSuccess(ctx, http.StatusOK, responseDTO)
 }
