@@ -1,7 +1,7 @@
 package api
 
 import (
-	v1 "auth-service/api/controller/v1"
+	v1 "auth-service/api/controllers/v1"
 	"auth-service/api/middleware"
 	"log"
 

@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"auth-service/api/controller"
+	"auth-service/api/controllers"
 	v1request "auth-service/dto/request/v1"
 	"auth-service/services"
 	"encoding/json"
@@ -23,14 +23,14 @@ func InitAuthController() *authController {
 
 func (c *authController) Login(ctx echo.Context) error {
 	url := c.authService.Login(ctx)
-	return controller.WriteSuccess(ctx, http.StatusOK, url)
+	return controllers.WriteSuccess(ctx, http.StatusOK, url)
 }
 
 func (c *authController) Callback(ctx echo.Context) error {
 	code := ctx.QueryParam("code")
 	accessToken, err := c.authService.LoginCallback(ctx, code)
 	if err != nil {
-		return controller.WriteError(ctx, http.StatusInternalServerError, err)
+		return controllers.WriteError(ctx, http.StatusInternalServerError, err)
 	}
 
 	resp := map[string]interface{}{"accessToken": accessToken}
@@ -40,7 +40,7 @@ func (c *authController) Callback(ctx echo.Context) error {
 func (c *authController) Logout(ctx echo.Context) error {
 	err := c.authService.Logout(ctx)
 	if err != nil {
-		return controller.WriteError(ctx, http.StatusInternalServerError, err)
+		return controllers.WriteError(ctx, http.StatusInternalServerError, err)
 	}
 
 	resp := map[string]interface{}{"message": "Logout successful"}
@@ -52,17 +52,17 @@ func (c *authController) Authenticate(ctx echo.Context) error {
 	dto := v1request.AuthenticateDTO{}
 
 	if err := json.Unmarshal(reqBody, &dto); err != nil {
-		return controller.WriteError(ctx, http.StatusBadRequest, err)
+		return controllers.WriteError(ctx, http.StatusBadRequest, err)
 	}
 
 	err := dto.Validate(ctx)
 	if err != nil {
-		return controller.WriteError(ctx, http.StatusBadRequest, err)
+		return controllers.WriteError(ctx, http.StatusBadRequest, err)
 	}
 
 	err = c.authService.Authenticate(ctx, dto)
 	if err != nil {
-		return controller.WriteError(ctx, http.StatusUnauthorized, err)
+		return controllers.WriteError(ctx, http.StatusUnauthorized, err)
 	}
 
 	resp := map[string]interface{}{"message": "Authentication successful"}
