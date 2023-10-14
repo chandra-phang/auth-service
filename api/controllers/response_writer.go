@@ -28,8 +28,8 @@ func WriteSuccess(c echo.Context, statusCode int, result interface{}) error {
 }
 
 func WriteError(c echo.Context, statusCode int, err error) error {
-	return c.JSON(statusCode, SuccessResponse{
+	return c.JSON(statusCode, FailureResponse{
 		Success: false,
-		Result:  err.Error(),
+		Failure: err.Error(),
 	})
 }
