@@ -7,4 +7,5 @@ var (
 	ErrAccessTokenNotFound  = errors.New("accessToken not found")
 	ErrAccessTokenIsEmpty   = errors.New("accessToken is empty")
 	ErrAccessTokenIsExpired = errors.New("accessToken is expired")
+	ErrInvalidServiceID     = errors.New("invalid Service-ID")
 )

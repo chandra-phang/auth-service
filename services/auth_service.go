@@ -3,7 +3,8 @@ package services
 import (
 	"auth-service/apperrors"
 	"auth-service/config"
-	"auth-service/dto/response"
+	reqV1 "auth-service/dto/request/v1"
+	respV1 "auth-service/dto/response/v1"
 	"auth-service/handlers"
 	"auth-service/lib"
 	"auth-service/model"
@@ -24,7 +25,7 @@ type IAuthService interface {
 	Login(ctx echo.Context) string
 	LoginCallback(ctx echo.Context, code string) (string, error)
 	Logout(ctx echo.Context) error
-	Authenticate(ctx echo.Context) error
+	Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) error
 }
 
 type authSvc struct {
@@ -32,6 +33,7 @@ type authSvc struct {
 	dbCon           *sql.DB
 	userRepo        model.IUserRepository
 	accessTokenRepo model.IAccessTokenRepository
+	activityLogRepo model.IActivityLogRepository
 }
 
 var authSvcSingleton IAuthService
@@ -42,6 +44,7 @@ func InitAuthService(h handlers.Handler) {
 		dbCon:           h.DB,
 		userRepo:        repositories.NewUserRepositoryInstance(h.DB),
 		accessTokenRepo: repositories.NewAccessTokenRepositoryInstance(h.DB),
+		activityLogRepo: repositories.NewActivityLogRepositoryInstance(h.DB),
 	}
 }
 
@@ -113,6 +116,7 @@ func (svc authSvc) LoginCallback(ctx echo.Context, code string) (string, error) 
 		return "", err
 	}
 
+	// commit the transaction
 	err = tx.Commit()
 	if err != nil {
 		return "", err
@@ -140,11 +144,15 @@ func (svc authSvc) Logout(ctx echo.Context) error {
 	return nil
 }
 
-func (svc authSvc) Authenticate(ctx echo.Context) error {
+func (svc authSvc) Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) error {
 	tokenString := ctx.Get("accessToken").(string)
 	if tokenString == "" {
 		return apperrors.ErrAccessTokenIsEmpty
 	}
+
+	// add DB transaction
+	tx, _ := svc.dbCon.Begin()
+	defer tx.Rollback()
 
 	accessToken, err := svc.accessTokenRepo.GetAccessTokenByTokenString(ctx, tokenString)
 	if err != nil {
@@ -155,10 +163,29 @@ func (svc authSvc) Authenticate(ctx echo.Context) error {
 		return apperrors.ErrAccessTokenIsExpired
 	}
 
+	activityLog := model.ActivityLog{
+		ID:        lib.GenerateUUID(),
+		UserID:    accessToken.UserID,
+		ServiceID: ctx.Get("serviceID").(string),
+		SourceUri: dto.SourceUri,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	err = svc.activityLogRepo.Create(ctx, activityLog)
+	if err != nil {
+		return err
+	}
+
+	// commit the transaction
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (svc authSvc) fetchUserInfo(accessToken string) (*response.UserInfoDTO, error) {
+func (svc authSvc) fetchUserInfo(accessToken string) (*respV1.UserInfoDTO, error) {
 	// Make a request to the UserInfo endpoint to fetch user details
 	queryParams := fmt.Sprintf("?access_token=%s", accessToken)
 	resp, err := http.Get(svc.config.UserInfoURL + queryParams)
@@ -170,7 +197,7 @@ func (svc authSvc) fetchUserInfo(accessToken string) (*response.UserInfoDTO, err
 		return nil, err
 	}
 
-	var userInfo response.UserInfoDTO
+	var userInfo respV1.UserInfoDTO
 	if err := json.Unmarshal(respBytes, &userInfo); err != nil {
 		return nil, err
 	}

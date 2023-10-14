@@ -18,6 +18,7 @@ func InitRoutes() {
 	v1Api.GET("/callback", authController.Callback)
 
 	v1Api.Use(middleware.AccessTokenMiddleware)
+	v1Api.Use(middleware.ServiceIdMiddleware)
 	v1Api.POST("/logout", authController.Logout)
 	v1Api.POST("/authenticate", authController.Authenticate)
 

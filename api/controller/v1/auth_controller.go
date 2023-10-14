@@ -2,7 +2,10 @@ package v1
 
 import (
 	"auth-service/api/controller"
+	v1request "auth-service/dto/request/v1"
 	"auth-service/services"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -45,7 +48,19 @@ func (c *authController) Logout(ctx echo.Context) error {
 }
 
 func (c *authController) Authenticate(ctx echo.Context) error {
-	err := c.authService.Authenticate(ctx)
+	reqBody, _ := ioutil.ReadAll(ctx.Request().Body)
+	dto := v1request.AuthenticateDTO{}
+
+	if err := json.Unmarshal(reqBody, &dto); err != nil {
+		return controller.WriteError(ctx, http.StatusBadRequest, err)
+	}
+
+	err := dto.Validate(ctx)
+	if err != nil {
+		return controller.WriteError(ctx, http.StatusBadRequest, err)
+	}
+
+	err = c.authService.Authenticate(ctx, dto)
 	if err != nil {
 		return controller.WriteError(ctx, http.StatusUnauthorized, err)
 	}
