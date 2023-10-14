@@ -166,7 +166,6 @@ func (svc authSvc) Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) err
 	activityLog := model.ActivityLog{
 		ID:        lib.GenerateUUID(),
 		UserID:    accessToken.UserID,
-		ServiceID: ctx.Get("serviceID").(string),
 		SourceUri: dto.SourceUri,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),

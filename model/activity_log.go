@@ -9,7 +9,6 @@ import (
 type ActivityLog struct {
 	ID        string
 	UserID    string
-	ServiceID string
 	SourceUri string
 	CreatedAt time.Time
 	UpdatedAt time.Time
