@@ -19,7 +19,7 @@ func InitRoutes() {
 
 	v1Api.Use(middleware.AccessTokenMiddleware)
 	v1Api.POST("/logout", authController.Logout)
-	v1Api.GET("/authenticate", authController.Authenticate)
+	v1Api.POST("/authenticate", authController.Authenticate)
 
 	log.Println("Server is running at 8081 port.")
 	e.Logger.Fatal(e.Start(":8081"))
