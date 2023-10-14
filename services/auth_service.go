@@ -126,12 +126,12 @@ func (svc authSvc) LoginCallback(ctx echo.Context, code string) (string, error) 
 }
 
 func (svc authSvc) Logout(ctx echo.Context) error {
-	tokenString := ctx.Get("accessToken").(string)
-	if tokenString == "" {
+	tokenString := ctx.Get("accessToken")
+	if tokenString == nil {
 		return apperrors.ErrAccessTokenIsEmpty
 	}
 
-	accessToken, err := svc.accessTokenRepo.GetAccessTokenByTokenString(ctx, tokenString)
+	accessToken, err := svc.accessTokenRepo.GetAccessTokenByTokenString(ctx, tokenString.(string))
 	if err != nil {
 		return apperrors.ErrAccessTokenNotFound
 	}
