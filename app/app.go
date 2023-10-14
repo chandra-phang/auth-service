@@ -3,6 +3,9 @@ package app
 import (
 	"auth-service/api"
 	"auth-service/config"
+	"auth-service/db"
+	"auth-service/handlers"
+	"auth-service/services"
 )
 
 type Application struct {
@@ -15,5 +18,12 @@ func NewApplication() Application {
 
 func (a Application) InitApplication() {
 	config.InitConfig()
+
+	database := db.InitConnection()
+	h := handlers.New(database)
+	services.InitServices(h)
+
 	api.InitRoutes()
+
+	db.CloseConnection(database)
 }
