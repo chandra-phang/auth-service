@@ -1,6 +1,7 @@
 package services
 
 import (
+	"auth-service/api/middleware"
 	"auth-service/apperrors"
 	"auth-service/config"
 	reqV1 "auth-service/dto/request/v1"
@@ -126,7 +127,7 @@ func (svc authSvc) LoginCallback(ctx echo.Context, code string) (string, error) 
 }
 
 func (svc authSvc) Logout(ctx echo.Context) error {
-	tokenString := ctx.Get("accessToken")
+	tokenString := ctx.Get(string(middleware.AccessTokenKey))
 	if tokenString == nil {
 		return apperrors.ErrAccessTokenIsEmpty
 	}
@@ -145,7 +146,7 @@ func (svc authSvc) Logout(ctx echo.Context) error {
 }
 
 func (svc authSvc) Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) (*model.User, error) {
-	tokenString := ctx.Get("accessToken")
+	tokenString := ctx.Get(string(middleware.AccessTokenKey))
 	if tokenString == nil {
 		return nil, apperrors.ErrAccessTokenIsEmpty
 	}
