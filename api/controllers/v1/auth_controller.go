@@ -2,8 +2,8 @@ package v1
 
 import (
 	"auth-service/api/controllers"
-	v1request "auth-service/dto/request/v1"
-	v1response "auth-service/dto/response/v1"
+	v1req "auth-service/dto/request/v1"
+	v1resp "auth-service/dto/response/v1"
 	"auth-service/services"
 	"encoding/json"
 	"io/ioutil"
@@ -24,8 +24,8 @@ func InitAuthController() *authController {
 
 func (c *authController) Login(ctx echo.Context) error {
 	url := c.authService.Login(ctx)
-	dto := v1response.LoginDTO{LoginUrl: url}
-	return controllers.WriteSuccess(ctx, http.StatusOK, dto)
+	resp := v1resp.LoginDTO{LoginUrl: url}
+	return controllers.WriteSuccess(ctx, http.StatusOK, resp)
 }
 
 func (c *authController) Callback(ctx echo.Context) error {
@@ -35,7 +35,7 @@ func (c *authController) Callback(ctx echo.Context) error {
 		return controllers.WriteError(ctx, http.StatusInternalServerError, err)
 	}
 
-	resp := map[string]interface{}{"accessToken": accessToken}
+	resp := v1resp.LoginCallbackDTO{AccessToken: accessToken}
 	return ctx.JSON(http.StatusOK, resp)
 }
 
@@ -45,13 +45,13 @@ func (c *authController) Logout(ctx echo.Context) error {
 		return controllers.WriteError(ctx, http.StatusInternalServerError, err)
 	}
 
-	dto := v1response.LogoutDTO{Message: "Logout success!"}
-	return controllers.WriteSuccess(ctx, http.StatusOK, dto)
+	resp := v1resp.LogoutDTO{Message: "Logout success!"}
+	return controllers.WriteSuccess(ctx, http.StatusOK, resp)
 }
 
 func (c *authController) Authenticate(ctx echo.Context) error {
 	reqBody, _ := ioutil.ReadAll(ctx.Request().Body)
-	dto := v1request.AuthenticateDTO{}
+	dto := v1req.AuthenticateDTO{}
 
 	if err := json.Unmarshal(reqBody, &dto); err != nil {
 		return controllers.WriteError(ctx, http.StatusBadRequest, err)
@@ -67,12 +67,6 @@ func (c *authController) Authenticate(ctx echo.Context) error {
 		return controllers.WriteError(ctx, http.StatusUnauthorized, err)
 	}
 
-	responseDTO := v1response.AuthenticateDTO{
-		User: v1response.UserDTO{
-			ID:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
-		},
-	}
-	return controllers.WriteSuccess(ctx, http.StatusOK, responseDTO)
+	resp := new(v1resp.AuthenticateDTO).ConvertFromUser(*user)
+	return controllers.WriteSuccess(ctx, http.StatusOK, resp)
 }
