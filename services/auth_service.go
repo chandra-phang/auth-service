@@ -127,7 +127,7 @@ func (svc authSvc) LoginCallback(ctx echo.Context, code string) (string, error) 
 }
 
 func (svc authSvc) Logout(ctx echo.Context) error {
-	tokenString := ctx.Get(string(middleware.AccessTokenKey))
+	tokenString := ctx.Get(middleware.AccessTokenKey)
 	if tokenString == nil {
 		return apperrors.ErrAccessTokenIsEmpty
 	}
@@ -146,7 +146,7 @@ func (svc authSvc) Logout(ctx echo.Context) error {
 }
 
 func (svc authSvc) Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) (*model.User, error) {
-	tokenString := ctx.Get(string(middleware.AccessTokenKey))
+	tokenString := ctx.Get(middleware.AccessTokenKey)
 	if tokenString == nil {
 		return nil, apperrors.ErrAccessTokenIsEmpty
 	}

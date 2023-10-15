@@ -6,11 +6,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// contextKey is a custom type for putting auth-related values into a context.
-type contextKey string
-
-// userContextKey is a key for saving a User object into a context.
-const AccessTokenKey contextKey = "accessToken"
+// userContextKey is a key for saving a accessToken into a context.
+const AccessTokenKey = "accessToken"
 
 func AccessTokenMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -20,7 +17,7 @@ func AccessTokenMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			authParts := strings.Fields(authHeader)
 			if len(authParts) == 2 && authParts[0] == "Bearer" {
 				accessToken := authParts[1]
-				echo.Context.Set(c, string(AccessTokenKey), accessToken)
+				echo.Context.Set(c, AccessTokenKey, accessToken)
 			}
 
 			// Clear the Authorization header to ensure it doesn't get processed further
