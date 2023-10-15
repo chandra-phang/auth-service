@@ -45,7 +45,7 @@ func (c *authController) Logout(ctx echo.Context) error {
 		return controllers.WriteError(ctx, http.StatusInternalServerError, err)
 	}
 
-	dto := v1response.AuthenticateDTO{Message: "Logout success!"}
+	dto := v1response.LogoutDTO{Message: "Logout success!"}
 	return controllers.WriteSuccess(ctx, http.StatusOK, dto)
 }
 
@@ -62,11 +62,17 @@ func (c *authController) Authenticate(ctx echo.Context) error {
 		return controllers.WriteError(ctx, http.StatusBadRequest, err)
 	}
 
-	err = c.authService.Authenticate(ctx, dto)
+	user, err := c.authService.Authenticate(ctx, dto)
 	if err != nil {
 		return controllers.WriteError(ctx, http.StatusUnauthorized, err)
 	}
 
-	responseDTO := v1response.AuthenticateDTO{Message: "Authentication success!"}
+	responseDTO := v1response.AuthenticateDTO{
+		User: v1response.UserDTO{
+			ID:    user.ID,
+			Name:  user.Name,
+			Email: user.Email,
+		},
+	}
 	return controllers.WriteSuccess(ctx, http.StatusOK, responseDTO)
 }

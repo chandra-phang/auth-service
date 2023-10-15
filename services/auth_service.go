@@ -25,7 +25,7 @@ type IAuthService interface {
 	Login(ctx echo.Context) string
 	LoginCallback(ctx echo.Context, code string) (string, error)
 	Logout(ctx echo.Context) error
-	Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) error
+	Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) (*model.User, error)
 }
 
 type authSvc struct {
@@ -144,10 +144,10 @@ func (svc authSvc) Logout(ctx echo.Context) error {
 	return nil
 }
 
-func (svc authSvc) Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) error {
+func (svc authSvc) Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) (*model.User, error) {
 	tokenString := ctx.Get("accessToken")
 	if tokenString == nil {
-		return apperrors.ErrAccessTokenIsEmpty
+		return nil, apperrors.ErrAccessTokenIsEmpty
 	}
 
 	// add DB transaction
@@ -156,11 +156,11 @@ func (svc authSvc) Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) err
 
 	accessToken, err := svc.accessTokenRepo.GetAccessTokenByTokenString(ctx, tokenString.(string))
 	if err != nil {
-		return apperrors.ErrAccessTokenNotFound
+		return nil, apperrors.ErrAccessTokenNotFound
 	}
 
 	if accessToken.ExpiredAt != nil && accessToken.ExpiredAt.Before(time.Now()) {
-		return apperrors.ErrAccessTokenIsExpired
+		return nil, apperrors.ErrAccessTokenIsExpired
 	}
 
 	activityLog := model.ActivityLog{
@@ -172,16 +172,21 @@ func (svc authSvc) Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) err
 	}
 	err = svc.activityLogRepo.Create(ctx, activityLog)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	user, err := svc.userRepo.GetUserByID(ctx, accessToken.UserID)
+	if err != nil {
+		return nil, err
 	}
 
 	// commit the transaction
 	err = tx.Commit()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return user, nil
 }
 
 func (svc authSvc) fetchUserInfo(accessToken string) (*respV1.UserInfoDTO, error) {
