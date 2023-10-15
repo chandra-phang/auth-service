@@ -7,7 +7,6 @@ import (
 	reqV1 "auth-service/dto/request/v1"
 	respV1 "auth-service/dto/response/v1"
 	"auth-service/handlers"
-	"auth-service/lib"
 	"auth-service/model"
 	"auth-service/repositories"
 	"context"
@@ -72,6 +71,7 @@ func (svc authSvc) LoginCallback(ctx echo.Context, code string) (string, error) 
 	tx, _ := svc.dbCon.Begin()
 	defer tx.Rollback()
 
+	// get user by email and externalID
 	user, err := svc.userRepo.GetUserByEmailAndExternalID(ctx, userInfo.Email, userInfo.ExternalID)
 	if err != nil && err != apperrors.ErrUserNotFound {
 		return "", err
@@ -79,20 +79,14 @@ func (svc authSvc) LoginCallback(ctx echo.Context, code string) (string, error) 
 
 	// create user if it's not exist
 	if user == nil {
-		user = &model.User{
-			ID:         lib.GenerateUUID(),
-			Name:       userInfo.Name,
-			Email:      userInfo.Email,
-			ExternalID: userInfo.ExternalID,
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
-		}
+		user = new(model.User).Initialize(userInfo.Name, userInfo.Email, userInfo.ExternalID)
 		err = svc.userRepo.CreateUser(ctx, *user)
 		if err != nil {
 			return "", err
 		}
 	}
 
+	// retrieve user's active accessTokens and revoke them
 	accessTokens, err := svc.accessTokenRepo.GetActiveAccessTokensByUserID(ctx, user.ID)
 	if err != nil && err != apperrors.ErrAccessTokenNotFound {
 		return "", err
@@ -104,14 +98,8 @@ func (svc authSvc) LoginCallback(ctx echo.Context, code string) (string, error) 
 		}
 	}
 
-	// create a new accessToken with new tokenString
-	accessToken := &model.AccessToken{
-		ID:          lib.GenerateUUID(),
-		UserID:      user.ID,
-		TokenString: token.AccessToken,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
+	// create a new accessToken with the new tokenString
+	accessToken := new(model.AccessToken).Initialize(user.ID, token.AccessToken)
 	err = svc.accessTokenRepo.CreateAccessToken(ctx, *accessToken)
 	if err != nil {
 		return "", err
@@ -164,14 +152,8 @@ func (svc authSvc) Authenticate(ctx echo.Context, dto reqV1.AuthenticateDTO) (*m
 		return nil, apperrors.ErrAccessTokenIsExpired
 	}
 
-	activityLog := model.ActivityLog{
-		ID:        lib.GenerateUUID(),
-		UserID:    accessToken.UserID,
-		SourceUri: dto.SourceUri,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	err = svc.activityLogRepo.Create(ctx, activityLog)
+	activityLog := new(model.ActivityLog).Initialize(accessToken.UserID, dto.SourceUri)
+	err = svc.activityLogRepo.Create(ctx, *activityLog)
 	if err != nil {
 		return nil, err
 	}

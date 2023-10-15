@@ -1,6 +1,7 @@
 package model
 
 import (
+	"auth-service/lib"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -13,6 +14,16 @@ type AccessToken struct {
 	ExpiredAt   *time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+}
+
+func (a AccessToken) Initialize(userID string, token string) *AccessToken {
+	return &AccessToken{
+		ID:          lib.GenerateUUID(),
+		UserID:      userID,
+		TokenString: token,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
 }
 
 type IAccessTokenRepository interface {
